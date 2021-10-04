@@ -29,7 +29,7 @@ paginate: 20
 
 #### Site
 title : 奋斗吧，骚年 ！！！
-tagline: A fresh looking and responsive theme for Jekyll
+tagline: None
 assets: /assets
 url:
 baseurl:
@@ -53,11 +53,11 @@ menu:
 widgets:
 - category
 - tag
-- tagcloud
+##- tagcloud
 - links
-- douban
-- github-card
-- rss
+##- douban
+##- github-card
+##- rss
 ## provide seven widgets:github-card,category,tag,rss,archive,tagcloud,links,weibo,douban
 
 
