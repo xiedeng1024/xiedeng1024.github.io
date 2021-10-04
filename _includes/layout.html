@@ -60,10 +60,10 @@
         {% include _partial/header.html %}
     </header>
     <div id="container">
+      {% include _partial/sidebar.html %}
       {{ content }}
       {% assign item = page %}
       {% assign table = false %}
-      {% include _partial/sidebar.html %}
     </div>
     <footer>{% include _partial/footer.html %}</footer>
     {% include _partial/after_footer.html %}
