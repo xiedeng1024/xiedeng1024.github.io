@@ -29,10 +29,10 @@ paginate: 20
 
 #### Site
 title : 奋斗吧，骚年 ！！！
-tagline: None
+tagline: ## None
 assets: /assets
-url:
-baseurl:
+url: https://xiedeng1024.github.io/archives/
+baseurl: https://xiedeng1024.github.io
 
 #### Language
 language: zh-CN    ## blog site languages: en, zh-CN, zh-TW, de
