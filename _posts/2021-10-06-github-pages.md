@@ -61,5 +61,5 @@ tags:
   ---
   ```
 
-* 访问站点 http(s)://<username>.github.io
+* 访问站点 ```http(s)://<username>.github.io```
 
