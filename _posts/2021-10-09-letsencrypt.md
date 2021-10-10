@@ -8,7 +8,7 @@ tags:
 ---
 
 # 注意事项
-
+```
 申请证书频率的限制? 
   同一个主域下一周只能申请 50 张证书 (例如 www.example.com 的主域是 example.com) 
   每个账户每个域名每小时申请验证失败的次数为 5 次 
@@ -16,28 +16,28 @@ tags:
   每个账户同一个 IPv4 地址每 3 小时最多可创建 10 张证书 
   每个多域名(SAN)证书最多包含 100 个子域 
   更新证书没有次数的限制，但是更新证书会受到上述重复证书的限制
-
+```
 # 基础知识
 
 **查询证书列表?**
 
-​	可在 https://crt.sh 进行查询域名的证书详情
+​	可在 [crt.sh](https://crt.sh) 进行查询域名的证书详情
 
-**证书维护**   https://tools.letsdebug.net/
+**证书维护**   [tools.letsdebug.net](https://tools.letsdebug.net)
 
-  证书搜索 https://tools.letsdebug.net/cert-search
+  [证书搜索](https://tools.letsdebug.net/cert-search)
 
-  证书撤销 https://tools.letsdebug.net/cert-revoke
+  [证书撤销](https://tools.letsdebug.net/cert-revoke)
 
 **Let’s Encrypt官网**
 
-​	https://letsencrypt.org/zh-cn/getting-started/
+​	[letsencrypt.org](https://letsencrypt.org/zh-cn/getting-started)
 
 **Let's Encrypt 速率限制**
 
 ​	注意：如需调试脚本 请使用测试环境API 生产环境申请次数限制比较严格 触发后比较麻烦
 
-​	https://letsencrypt.org/zh-cn/docs/rate-limits/
+​	[letsencrypt rate-limits](https://letsencrypt.org/zh-cn/docs/rate-limits)
 
 **ACME 客户端**
 
@@ -45,21 +45,20 @@ tags:
 
 ​	centos系统安装存在依赖问题 使用docker方式 可移植性更强
 
-​	https://certbot.eff.org/docs/install.html#running-with-docker
+​	[certbot running-with-docker](https://certbot.eff.org/docs/install.html#running-with-docker)
 
 **Certbot 命令行参数**
 
-​	https://certbot.eff.org/docs/using.html#certbot-command-line-options
+​	[certbot-command-line-options](https://certbot.eff.org/docs/using.html#certbot-command-line-options)
 
-**关于通配符证书(泛域名证书)的支持:**
 
-​	https://community.letsencrypt.org/t/acme-v2-production-environment-wildcards/55578
+[关于通配符证书(泛域名证书)的支持](https://community.letsencrypt.org/t/acme-v2-production-environment-wildcards/55578)
 
 ​	已支持，不过需要使用 DNS 记录进行域名所有权的验证。
 
-**Let's Encrypt 证书的兼容性:**
+[Let's Encrypt 证书的兼容性](https://letsencrypt.org/docs/certificate-compatibility/)
 
-​	兼容性列表: https://letsencrypt.org/docs/certificate-compatibility/
+
 
 # 准备文件
 
