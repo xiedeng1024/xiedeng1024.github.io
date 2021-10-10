@@ -7,7 +7,8 @@ tags:
 - LetsEncrypt
 ---
 
-# 注意事项    测试时务必使用staging api
+# 注意事项    
+测试时务必使用staging api
 ```
 申请证书频率的限制? 
   同一个主域下一周只能申请 50 张证书 (例如 www.example.com 的主域是 example.com) 
@@ -257,7 +258,7 @@ syncssl office
   docker push registry.example.com/certbot:alydns-v0.0.0-20211009
   ```
 
-# 使用 acme-staging-v02.api.letsencrypt.org 测试
+# 使用 staging api 测试
 
 ```bash
 docker run --network host --rm --name certbot -v /root/.jenkins/workspace/ops-nginx/cron-ops-letsencrypt:/etc/letsencrypt -v /data/k8s-ops-deploy-file/scripts/letsencrypt:/data/k8s-ops-deploy-file/scripts/letsencrypt registry.example.com/certbot:alydns-v0.0.0-20211009 certonly --manual --agree-tos --server https://acme-staging-v02.api.letsencrypt.org/directory --register-unsafely-without-email --preferred-challenges dns-01 --manual-public-ip-logging-ok --manual-auth-hook '/bin/sh /data/k8s-ops-deploy-file/scripts/letsencrypt/certbot.sh adddns' --manual-cleanup-hook '/bin/sh /data/k8s-ops-deploy-file/scripts/letsencrypt/certbot.sh cleandns' --preferred-chain 'ISRG Root X1' -d '*.dev.example.com'
