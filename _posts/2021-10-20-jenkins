@@ -1,0 +1,206 @@
+---
+title: jenkins
+date: 2021-10-04 22:30:00
+categories: Jenkins
+description: Jenkins
+tags:
+- Jenkins
+---
+
+
+
+# 注意： jenkins插件安装升级 做好备份
+
+示例：https://plugins.jenkins.io/cas-plugin/
+
+```ini
+### 升级通知
+- Jenkins **2.266 及更高**版本需要 CAS 插件版本**1.5.0**或更高版本。
+- Jenkins **2.265 及更低**版本需要 CAS 插件版本**1.4.3**（*不*兼容1.5.0 ）。
+- Jenkins **2.160 或 2.150.2 LTS**及更高版本需要 CAS 插件版本**1.4.3**。
+
+在这些情况下，您需要同时升级 Jenkins 和 CAS 插件以避免出现问题。这意味着手动下载和更新`cas-plugin.hpi`Jenkins`plugins`目录中的文件（`cas-plugin.jpi`根据需要重命名）
+```
+
+
+
+# Nginx 代理 jenkins
+
+https://www.jenkins.io/doc/book/system-administration/reverse-proxy-configuration-nginx/
+
+
+
+# Jenkins 中使用 Kubernetes 插件动态 Slave Pod 代理
+
+* https://plugins.jenkins.io/kubernetes/
+
+* https://github.com/jenkinsci/kubernetes-plugin
+
+* 解决 JNLP slaves 无法通过 Nginx 连接 Jenkins 的问题
+
+  ```bash
+  /opt/jdk1.8.0_111/bin/java -Dhudson.TcpSlaveAgentListener.hostName=172.30.7.5 -jar /data/jenkins/jenkins.war --httpPort=8080 --logfile=/var/log/jenkins.log --daemon
+  ```
+
+  设置完毕后，Jenkins 的所有页面（及其发出/响应的 HTTP 请求）都会带有额外的 HTTP header (X-Jenkins-CLI-Host) 包含上述信息，这些信息会给到 JNLP slaves 去连接正确的 TcpSlaveAgentListener 的地址。
+
+* 指定代理端口
+
+  ```ini
+  进入 **系统管理->全局安全配置->代理->TCP port for inbound agents** ，指定端口 50000
+  ```
+
+  Jenkins使用一个TCP端口和JNLP节点代理通讯.  通常这个端口号是随机选取的,以避免冲突,但是这对于系统来说是不固定的.如果你不使用JNLP节点代理,  推荐你禁用TCP端口.另一种选择就是指定一个不变的端口号,以便你的防火墙做对应的设置.
+
+* 使用 rbac授权，token的方式连接k8s
+
+  ```bash
+  ## https://github.com/jenkinsci/kubernetes-plugin/blob/master/src/main/kubernetes/service-account.yml
+  
+  kubectl create ns jenkins
+  kubectl create -f service-account.yml -n Jenkins
+  kubectl create clusterrolebinding jenkins --clusterrole=cluster-admin --serviceaccount=jenkins:jenkins
+  kubectl get secrets jenkins-token-z6gdm -n jenkins -o jsonpath='{.data.token}'|base64 -d
+  ## 获取到的token解密值，需要在Jenkins master中添加为secret text类型的凭据credentials，才能被kubernetes-plugin使用 此时需要禁用HTTPS证书检查
+  ```
+
+* 配置Kubernetes插件
+
+  进入 系统管理->系统设置->云 中，点击 新增一个云 选项，来新建一个与 Kubernetes 的连接
+
+  jnlp：https://hub.docker.com/r/jenkins/inbound-agent/    容器名必须指定jnlp 才可覆盖插件默认的jnlp镜像
+
+  docker：docker in docker 必须映射宿主docker指定文件到容器实现
+
+  ```bash
+  ## Host Path Volume
+  /usr/bin/docker
+  /var/run/docker.sock
+  /etc/docker
+  ## Secret Volume
+  dockerconf --> /root/.docker ##docker内访问镜像仓库需要
+  gitconf --> /root ##docker内访问git需要
+  cd /root/.docker && kubectl create secret generic dockerconf -n jenkins --from-file=config.json
+  cd /root && kubectl create secret generic gitconf -n jenkins --from-file=.gitconfig --from-file=.git-credentials
+  ```
+
+* k8s 拉取pod templates 镜像需要的secret
+
+  ```bash
+  ## https://kubernetes.io/zh/docs/tasks/configure-pod-container/pull-image-private-registry/
+  kubectl create secret docker-registry secretname \
+    --docker-server=<你的镜像仓库服务器> \
+    --docker-username=<你的用户名> \
+    --docker-password=<你的密码> \
+    --docker-email=<你的邮箱地址>
+  ```
+
+  
+
+# Jenkinsfile 
+
+* tips
+
+```groovy
+# cat jenkinsfile/JenkinsfileESInstall
+pipeline {
+    options { skipDefaultCheckout(true) }    //跳过默认拉取
+    agent { label 'master' }
+    stages {
+      stage('Checkonline') {
+            steps{
+                wrap([$class: 'BuildUser']) {    //https://plugins.jenkins.io/build-user-vars-plugin
+                    script {
+                        if ( "$ConfEnv" =~ "^pre" ) {
+                           sh '''
+                               if [ "$SoftEnv" == "node" ];then
+                                   echo "$JOB_NAME allow online"
+                               else
+                                   [[ "$Cluster" =~ "docker-pre" ]] && sh precheck.sh $JOB_NAME $BUILD_USER_ID || exit -1
+                               fi
+                           '''
+                        } else {
+                           sh '''
+                               if [ "$SoftEnv" == "node" ];then
+                                   sh prodcheck.sh $JOB_NAME $BUILD_USER_ID
+                               elif [ "$Cluster" = "docker-gpu-ksyun" ];then
+                                   echo "continue"
+                               else
+                                   [ "$Cluster" != "docker-pre" ] && sh prodcheck.sh $JOB_NAME  $BUILD_USER_ID || exit -1
+                               fi
+                           '''
+                        }
+                    }
+                }
+              script {
+                        def buildServer = ["docker-f-node-build-2", "docker-f-node-build-1",] as String[]
+                        Random rand = new Random()
+                        random_num = rand.nextInt(2)
+                        env.agentName = buildServer[random_num]
+
+                        env.domainPath = sh (script: '''
+                            set +x
+                            projectName=$(echo ${JOB_NAME} |awk -F'/' '{print \$NF}')
+                            domain=$(curl -s https://api.example.com?name__icontains=${projectName}|jq .[0]."page"."domain")
+                            domainroot=$(curl -s https://api.example.com?name__icontains=${projectName}|jq .[0]."page"."root")
+                            if [ "$ConfEnv" == "pre" ];then
+                                echo -n ${domain}${domainroot}|tr -d '"'|sed "s#\\.#-pre\\.#"
+                            else
+                                echo -n ${domain}${domainroot}|tr -d '"'
+                            fi
+                        ''', returnStdout: true).trim()
+                        echo env.domainPath
+                }
+            }
+        }
+        stage('next') {
+          agent { label env.agentName }
+          steps {
+              script {
+                  sh '''
+                       sh script.sh $JOB_NAME $Cluster """$Description"""  $WORKSPACE $domainPath
+                  '''
+              }
+          }
+        }
+    }
+  
+  post {
+       always {
+            script {
+                    echo 'One way or another, I have finished'
+                    deleteDir() /*   clean up our workspace */
+            }
+       }
+
+       failure {
+            script {
+                if ( "$ConfEnv" =~ 'pro') {
+                    echo 'release failed.'
+                    dingTalk accessToken: 'XXX',
+                    jenkinsUrl: 'http://jenkins.dev.example.com',
+                    message: 'release failed.' ,
+                    notifyPeople:''
+                }
+            }
+       }
+       success {
+            script {
+                if ( "$ConfEnv" =~ 'pro') {
+                    echo 'release success.'
+                    dingTalk accessToken: 'XXX',
+                    jenkinsUrl: 'http://jenkins.dev.example.com',
+                    message: 'release success.' ,
+                    notifyPeople:''
+                }
+            }
+       }
+    }
+
+}
+```
+
+
+
+
+
