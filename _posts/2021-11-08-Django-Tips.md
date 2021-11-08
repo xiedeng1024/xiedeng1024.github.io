@@ -1,0 +1,57 @@
+* Django 流程图    <https://hitesh.in/2009/django-flow>
+
+```python
+# 只获取title列表，只有value
+Article.objects.all().values_list('title', flat=True)
+
+# 快速decoding encoding
+str(data,encoding='utf-8')
+bytes(data,encoding='utf-8')
+
+# http响应
+from django.shortcuts import HttpResponse
+return HttpResponse("ok")
+
+# 模板响应
+from django.shortcuts import render
+return render(request, "index.html", {'name':"haha"})    
+
+# 跳转
+from django.shortcuts import redirect
+return redirect('/index.html')
+return redirect('https://www.baidu.com')
+
+# 终止符
+url(r'^host$', views.edit)
+
+# 伪静态 添加.html SEO认为是静态页面 确定性高
+url(r'^host/(\d+).html$', views.edit)
+
+# 具体url 避免user?k1=a&k2=b SEO认为是具体页面 确定性高
+url(r'^host/(\w+)/(\w+)/(\d+).html$', views.edit)
+
+# 默认路由 最后兜底匹配所有反解析 url
+url(r'^', views.func404)
+
+# 反解析 url
+from django.urls import reverse
+url(r'^/add-user/(\d+)$', view.addUser, name=n1)
+reverse('n1', kwargs={'a1':111})
+
+# CBV
+from django.views import View
+class Login(View):
+    def dispatch(self, request, *args, **kwargs):
+        print('before')
+        ret = super(Login, self).dispatch(request, *args, **kwargs)
+        print('after')
+        return ret
+
+    def get(self, request, *args, **kwargs):
+        return HttpResponse("ok")
+
+var token = $.cookie('csrftoken')
+headers: {'X-CSRFToken': token}
+
+
+```
